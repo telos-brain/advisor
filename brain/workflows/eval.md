@@ -1,7 +1,7 @@
 ---
 name: Learning Eval (Run)
 code: WF-EVAL-RUN
-version: 8
+version: 9
 type: TRIGGERED
 description: >-
   Automatic workflow-run learning eval (BRA207 / BRA406). Loads the subject
@@ -14,7 +14,7 @@ description: >-
 model: anthropic/claude-sonnet-4-6
 system-prompt-code: WF-SYSTEM-PROMPT
 trigger: workflowrun:complete
-trigger-mode: automatic
+trigger-mode: manual
 output-tokens: 4096, 8192, 16384
 caching: automatic
 max-turns: 22

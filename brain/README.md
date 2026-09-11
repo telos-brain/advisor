@@ -1,104 +1,202 @@
-# Starter Brain
+# Advisor brain (Sol)
 
-Onboarding guide for a Telos Brain. Precise enough for Claude Code / Cursor to execute. Complete the steps in order.
+This is a **Telos Brain** that acts as an advisor to *your* AI agents — Claude Cowork, Grokbot, Cursor, and anything else that can call MCP tools.
 
-## 1. Install and initialise
+The advisor's name is **Sol**. Treat Sol like a human advisor: brief them, give them the craft they need, then use them when you are reviewing work and decisions. Sol is not a chatbot and not a second pair of hands on the keyboard. Sol holds memory, skills, and judgment, and answers when the calling agent asks.
+
+This README is written for an **AI agent** that will set the brain up with a human. Do not invent API keys. Ask the user for each secret, wait, then continue.
+
+---
+
+## What Sol does
+
+Once deployed and connected over MCP, the calling agent can:
+
+| Situation | Tool |
+|---|---|
+| Information worth remembering (notes, facts, preferences, decisions, current context) | `briefing` |
+| Current or external information that should also be remembered | `research` |
+| A new problem that needs framing before a solution | `create_frame_of_reference` |
+| A plan or piece of thinking that needs a quality check | `ask_sol` |
+| One factual question against stored memory | `ask_question` |
+| A transferable practice to apply | `find_available_skills` then `get_skill` |
+
+Memory holds situation-specific knowledge. Skills hold transferable practices. Do not confuse the two.
+
+The brain already ships skill books for advisory craft, decision making, and business. You can add more (see [Working with Sol](#working-with-sol)).
+
+---
+
+## The name "Sol"
+
+**Sol** is the advisor's persona — how the brain introduces itself to calling agents.
+
+To rename Sol, edit these files and redeploy. Search the `brain/` folder for `Sol` so you do not miss a line.
+
+| File | What to change |
+|---|---|
+| `workflows/system-prompt.md` | Persona: "You are Sol…" and the tone line that mentions Sol. This is shared by most advisor workflows. |
+| `workflows/advisor.md` | MCP workflow `name`, description, and the instructions that say "You are Sol". This is what calling agents see. |
+| `workflows/ask-for-advice.md` | Workflow title **Ask Sol** and any Sol wording in the description. |
+| `tools/execution/advisor/ask-sol.yml` | Tool name `ask_sol` and description. If you rename the tool, also update the `tools:` list on `advisor.md` and `chat.md`. |
+| `workflows/sol-research.md` | Opening line ("You are Sol researching…"). |
+| `tools/execution/advisor/research.yml` / `briefing.yml` | Descriptions that say "Ask Sol…". |
+
+The brain's product name in `brain-compose.yml` is **Advisor**. That is the instance label in the Telos Brain UI, not the persona. Change `name:` there only if you want a different brain title.
+
+---
+
+## Prerequisites the user must provide
+
+Stop and ask the user for these. Do not skip ahead.
+
+### 1. Telos Brain organisation and API key
+
+1. Tell the user to open **https://go.telosbrain.com** and create an organisation (free sign-up).
+2. Tell them to create an **organisation API key** (they must be an organisation admin). The full key is shown **once**.
+3. Ask them to paste that key. Put it in `brain/.env` as `TELOS_BRAIN_ORG_API_KEY`. Never commit `.env`.
+
+Cloud deploy talks to `https://go.telosbrain.com` by default (`TELOS_BRAIN_API_URL` in `.env.example`).
+
+### 2. An LLM key (Claude or Grok)
+
+Sol's workflows need a model key or they will not run. Ask the user which they have, then collect **one**:
+
+| Provider | Where to get a key | `.env` variable |
+|---|---|---|
+| Claude (Anthropic) | https://console.anthropic.com | `ANTHROPIC_API_KEY` |
+| Grok (xAI) | https://console.x.ai | `XAI_API_KEY` |
+
+Starter workflows pin Anthropic (`anthropic/claude-sonnet-4-6`). If the user only has a Grok key, set `XAI_API_KEY` **and** point the brain at an xAI model, for example in `.env`:
+
+```
+DEFAULT_LLM_MODEL=xai/grok-4-5
+```
+
+or ask them to set **Default LLM model** in the brain Settings after first deploy. A reachable brain default overrides the workflow pins.
+
+Optional later:
+
+- `VOYAGE_API_KEY` — https://dash.voyageai.com — semantic search (`voyage-3-lite`). Deploy works without it; skill and memory search will be weaker.
+- `OPENAI_API_KEY` / `OPENROUTER_API_KEY` — only if you switch models to those providers.
+
+---
+
+## Deploy to the cloud (default)
+
+Work from the `brain/` directory.
+
+1. Install the CLI if it is missing:
+
+   ```bash
+   npm install -g @telos.ready/brain
+   ```
+
+2. Copy `.env.example` to `.env` (if `.env` does not already exist).
+
+3. Fill in, from the user:
+
+   ```
+   TELOS_BRAIN_ORG_API_KEY=<their org key>
+   TELOS_BRAIN_API_URL=https://go.telosbrain.com
+   ANTHROPIC_API_KEY=<their Claude key>
+   ```
+
+   or `XAI_API_KEY` plus `DEFAULT_LLM_MODEL` as above. Leave unused key lines blank.
+
+4. Deploy:
+
+   ```bash
+   brain deploy --instance advisor
+   ```
+
+5. **Capture the Brain API key from stdout immediately** on first deploy. It is printed **once**. Tell the user to store it in a password manager. Do not commit it. Do not delete `brain.lock`.
+
+6. If you change model keys or `DEFAULT_LLM_MODEL` later, redeploy the same command so the brain stores the new values.
+
+**Redeploy tip:** if a later deploy hits HTTP 409, run `brain snapshot` first so live version numbers come back to disk.
+
+---
+
+## Connect via MCP
+
+After a successful cloud deploy:
+
+1. Tell the user to sign in at **https://go.telosbrain.com**.
+2. Open this brain (instance **advisor**, title **Advisor**).
+3. Open **Workflows**. Find the MCP workflow named **Sol** (`WF-ADVISOR`).
+4. Copy the **MCP URL** shown on that workflow. That is the URL the calling agent uses.
+5. In Claude Cowork, Grokbot, Cursor, or the host they use, add an MCP server with that URL and complete authorisation (OAuth on the hosted MCP, or the organisation API key if the client asks for a bearer token).
+
+After connecting, the calling agent should see Sol's tools (`briefing`, `research`, `create_frame_of_reference`, `ask_sol`, `ask_question`, `find_available_skills`, `get_skill`).
+
+If tools do not appear, have the user toggle the MCP server off and on in the client so the tool list refreshes.
+
+---
+
+## Working with Sol
+
+Use Sol the way you would use a human advisor.
+
+**Start by briefing.** Call `briefing` with anything Sol should remember on later turns: how the user works, current projects, decisions already made, notes from books, constraints. Do not wait until you need advice. An unbriefed advisor is guessing.
+
+**Give Sol craft when you have it.** This brain already has Advisory, Decision Making, and Business skill books. If the user has specific practices their agents should follow (how *this* company decides, writes, sells, or ships), create a skill book under `brain/skills/` and deploy it. One skill per file; a `skillbook.yml` lists them. Situation-specific facts still go through `briefing`, not into skills.
+
+**Use Sol when reviewing work and decisions.** When the calling agent has a plan, a design, or a choice:
+
+1. Frame a new problem with `create_frame_of_reference` *before* locking a solution.
+2. Check a proposed approach with `ask_sol`.
+3. Prefer Sol's reply over inventing your own critique.
+
+Keep your own messages short. Put the substance in the tool arguments.
+
+---
+
+## Deploy locally (optional)
+
+Use this only when the user wants a Brain stack on their machine. Cloud is the default.
+
+Requirements: Node.js 25+, Docker.
 
 ```bash
 npm install -g @telos.ready/brain
-brain init
+cd brain
+brain start
 ```
 
-## 2. Building the schema
+`brain start` writes `.env.local` (if missing), starts SQL Server and the Brain server in Docker, and opens the admin UI at **http://127.0.0.1:60061** (no sign-in). It uses a well-known local organisation key that **must not** be used in production.
 
-The starter includes the Telos Brain skill book and learning/maintenance workflows. There are two ways to turn that into *your* brain. Complete this **before** deploy. Category quality directly determines learning quality — generic categories produce generic learnings.
-
-1. **Auto-build from an existing application** — in Cursor or Claude Code, load skill **BRA211** (`skills/telos-brain/brain-schema/BRA211-auto-building-a-brain.md`) and follow it. That skill is fully contained (researches the app, writes the schema, and wires the Execute API). Do not copy that process into this README.
-2. **Guided interview** — load skill **BRA104** (`skills/telos-brain/concepts/BRA104-getting-started.md`). **Requires human input** — an AI agent must not skip or auto-answer. It asks one decision at a time (entity, unit of work, blueprint categories, skill categories) and produces a configuration summary to apply.
-
-Use BRA211 when the host application already exists. Use BRA104 for a greenfield brain.
-
-## 3. Deploy
-
-Copy `.env.example` to `.env`. Deploy needs the org API key. Starter workflows need an Anthropic key to run:
-
-```
-TELOS_BRAIN_ORG_API_KEY=your-org-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
-```
-
-- `TELOS_BRAIN_ORG_API_KEY` — https://go.telosbrain.com (sign up for free and create an API key)
-- `ANTHROPIC_API_KEY` — https://console.anthropic.com (needed for the starter workflow `model:` pins)
-
-Starter workflows pin `anthropic/claude-sonnet-4-6` (compaction uses Haiku) so a brain with only `ANTHROPIC_API_KEY` still runs. To point **every** workflow at one provider/model without editing YAML, set **Default LLM model** in Settings, `DEFAULT_LLM_MODEL` in `.env`, or `llm-model` in `brain-compose.yml` (BRA210). A reachable brain default overrides the workflow pins. Leave those unset to keep each workflow's own `model:`.
-
-Optional:
-
-- `VOYAGE_API_KEY` — https://dash.voyageai.com (semantic search; this brain defaults to `voyage-3-lite`). Deploy succeeds without it; embeddings are skipped.
-- `OPENAI_API_KEY` / `XAI_API_KEY` / `OPENROUTER_API_KEY` — for `openai/…`, `xai/…`, or `openrouter/…` models
-- `AZURE_OPENAI_API_KEY` / `AZURE_OPENAI_ENDPOINT` — for `azure/…` models (remainder is the Azure deployment name; BRA210)
-- `LOCAL_LLM_1_BASE_URL` — Ollama / llama.cpp (`model: local_1/<id>`; BRA106 §8)
-- `DEFAULT_LLM_MODEL` — e.g. `local_1/qwen3:8b`, `openrouter/anthropic/claude-sonnet-4.6`, `openrouter/auto`, `azure/gpt-4o-prod`, or `anthropic/claude-sonnet-4-6`
+Put the Claude or Grok key in `.env.local` (same variable names as cloud). Then:
 
 ```bash
-brain deploy --env [local|dev|stage|prod]
+brain deploy --env local --instance advisor
 ```
 
-Optional: `--instance <name>` to name the brain instance. Deploy reads `.env` for the variables the brain should use.
-
-**Capture the Brain API key from stdout immediately.** On first deploy the CLI prints a plaintext Brain API key **once only**. Store it securely (password manager / secrets manager). Do **not** commit it to source control.
-
-Do not delete `brain.lock` after first deploy — subsequent deploys read the brain ID from it.
-
-**Changing models or local LLMs.** After you add or edit `DEFAULT_LLM_MODEL`, `LOCAL_LLM_*`, a provider API key, compose `llm-model`, or a workflow `model:` pin, redeploy so the brain stores the new values:
+Find the Sol MCP URL on the local workflows page the same way as in the cloud. Point the MCP client at that local URL. Localhost does not use hosted OAuth the same way — the client should send the local organisation API key if asked.
 
 ```bash
-brain deploy --env [local|dev|stage|prod]
+brain status
+brain stop --project-id <id-from-status>
 ```
 
-Settings **Default LLM model** applies immediately (no deploy). Persist the same value as `DEFAULT_LLM_MODEL` in `.env` (or `llm-model` in compose) so the next deploy does not clear it. Local Ollama from Brain-in-Docker must use `http://host.docker.internal:11434/v1`, not `localhost`. `ollama pull` (or loading a new llama.cpp weights file) on an already-stored `LOCAL_LLM_N_BASE_URL` does **not** need a redeploy — Settings lists models from the runner live. Full how-to: **BRA106** §8.
+Full local-stack detail: skill **BRA106** (`skills/telos-brain/concepts/BRA106-local-development.md`).
 
-**Redeploy tip:** run `brain snapshot` before redeploying during iterative development to pull live version numbers to disk and avoid HTTP 409 conflicts.
-
-## 4. Train the brain
-
-After the schema exists, upload documents, transcripts, or emails via the Brain admin UI or API inbox. Processing follows the brain's learning mode.
-
-**Learning mode:** `brain-compose.yml` defaults to `learning-mode: high`. Recommended: start at `high`, review daily checkpoints for the first 5 days on the Grading graph, then set `low` when learning quality is acceptable.
-
-## 5. Use the brain via the Execute API
-
-Smoke-test with the Brain API key from step 3:
-
-```bash
-curl -X POST https://go.telosbrain.com/workflows/WF-CHAT/run/sync \
-  -H "Authorization: Bearer YOUR_BRAIN_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"inputMessage": "Hello world"}'
-```
-
-Full Execution API docs: Telos Brain skill book **Run** category — start with **BRA401** (authentication conventions), then **BRA402**–**BRA407**.
-
-## 6. Custom harness or DIY
-
-- **Custom harness:** https://www.telosready.com
-- **DIY:** follow the Execute API / Run skills (**BRA401** onwards)
-
-The curl in step 5 is a smoke test only. Production use needs a harness wired to your business systems.
+---
 
 ## Repository hygiene
 
-Gitignore (do not commit):
+Do not commit:
 
-- `.env`
-- `brain.lock`
-- `node_modules/`
-- `dist/`
+- `.env`, `.env.local`
+- `brain.lock` (if it contains keys)
+- `node_modules/`, `dist/`
 
-Commit `.env.example` with placeholder values only. Never store the Brain API key in the repo.
+Commit `.env.example` with placeholders only. Never store org keys, LLM keys, or the Brain API key in git.
+
+---
 
 ## Support
 
-Copyright Telos IP Limited 2026
-www.telosbrain.com
+Copyright Telos IP Limited 2026  
+https://www.telosbrain.com  
 support@telosbrain.com
