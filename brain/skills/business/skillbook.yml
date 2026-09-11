@@ -1,7 +1,7 @@
 name: Business
 code: BUS
 prefix: BUS
-version: 2
+version: 3
 description: >-
   Transferable business practices — how to sell, serve customers, run
   operations, handle money, and lead. Skills are methods and standards, not
@@ -21,7 +21,8 @@ categories:
       retention, accounts, and handling tension. Distinct from Sales (winning
       the work) and from Operations (delivering the work).
     index: 200
-    skills: []
+    skills:
+      - customer/BUS201-choose-your-table.md
   - name: Operations
     description: >-
       How work gets done day to day — delivery, process, capacity, quality,
@@ -29,14 +30,19 @@ categories:
       Finance (money) and from Strategy skills in the Advisory book (what
       to do, not how the shop runs).
     index: 300
-    skills: []
+    skills:
+      - operations/BUS301-field-before-house.md
   - name: Finance
     description: >-
       How money moves — cash, pricing, invoicing, margins, forecasting and
       simple commercial hygiene. Distinct from Sales (the conversation) and
       from Operations (the work that generates the invoice).
     index: 400
-    skills: []
+    skills:
+      - finance/BUS401-do-not-stand-surety.md
+      - finance/BUS402-slow-money.md
+      - finance/BUS403-honest-weights.md
+      - finance/BUS404-the-borrower-serves.md
   - name: Leadership
     description: >-
       How to set direction, make people decisions, and run a small team or
@@ -44,4 +50,6 @@ categories:
       Distinct from the Advisory book's Counsel (how advice is given) and
       from Operations (the work system).
     index: 500
-    skills: []
+    skills:
+      - leadership/BUS501-iron-sharpens-iron.md
+      - leadership/BUS502-name-before-riches.md

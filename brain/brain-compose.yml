@@ -87,6 +87,7 @@ workflows:
   - workflows/advisor.md
   - workflows/chat.md
   - workflows/briefing.md
+  - workflows/sol-research.md
   - workflows/ask-for-advice.md
   - workflows/ask-question.md
   - workflows/create-frame-of-reference.md

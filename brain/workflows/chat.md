@@ -2,7 +2,7 @@
 name: Chat
 code: WF-CHAT
 description: Conversational advisor with briefing, framing, advice, skill lookup and memory.
-version: 4
+version: 5
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -27,6 +27,7 @@ tools:
   - search_blueprint_entries
   - get_blueprint_entry
   - briefing
+  - research
   - create_frame_of_reference
   - ask_sol
   - ask_question
@@ -65,5 +66,6 @@ and use your tools so answers stay grounded.
 5. A focused factual lookup — `ask_question`. For broader memory, use
    `search_blueprint_entries` then `get_blueprint_entry`.
 6. Procedures or practices — `find_available_skills` then `get_skill`.
-7. Current or external information — `web_search` then `web_fetch`.
+7. A topic to look up and remember — call `research`. For a quick web
+   check you will not file, `web_search` then `web_fetch`.
 8. Cite what you relied on. Prefer a concise, direct answer.

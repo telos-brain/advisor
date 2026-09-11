@@ -1,7 +1,8 @@
 name: Advisor
 description: >-
-  Workflow tools Sol exposes — briefing valued information into memory, and
-  asking Sol for a short quality check on a proposed approach.
+  Workflow tools Sol exposes — briefing, research, and asking Sol for a
+  short quality check on a proposed approach.
 tools:
   - briefing.yml
+  - research.yml
   - ask-sol.yml

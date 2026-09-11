@@ -6,7 +6,7 @@ description: >-
   useful guidance. Loads relevant skills, builds a frame of reference, and
   queries memory. Use when you have a solution or plan and want a quality
   check — not when you are still framing the problem.
-version: 4
+version: 5
 model: anthropic/claude-sonnet-4-6
 
 # TOOL: invoked via tools/execution/advisor/ask-sol.yml as {{input.request}}.
@@ -31,11 +31,28 @@ tools:
 available-skills:
   - ADV201
   - ADV202
+  - ADV301
+  - ADV302
+  - ADV303
   - ADV501
+  - ADV502
+  - ADV503
+  - ADV504
+  - ADV505
+  - ADV506
   - ADV601
   - ADV602
   - ADV701
   - ADV801
+  - ADV802
+  - BUS201
+  - BUS301
+  - BUS401
+  - BUS402
+  - BUS403
+  - BUS404
+  - BUS501
+  - BUS502
   - DEC101
   - DEC102
   - DEC201
@@ -47,7 +64,10 @@ available-skills:
   - DEC601
   - DEC701
   - DEC702
+  - DEC703
+  - DEC704
   - DEC801
+  - DEC802
 ---
 
 # Instructions

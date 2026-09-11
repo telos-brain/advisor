@@ -1,7 +1,7 @@
 name: Advisory
 code: ADV
 prefix: ADV
-version: 3
+version: 4
 description: >-
   The craft of advising — how to think, frame, judge, decide and counsel.
   Skills are transferable practices, not types of advice. Domain knowledge from
@@ -36,7 +36,10 @@ categories:
       proportional response. Distinct from Decision Quality (the process of
       committing) and from Strategy (direction and what to ignore).
     index: 300
-    skills: []
+    skills:
+      - judgment/ADV301-rule-your-spirit.md
+      - judgment/ADV302-stay-out-of-the-quarrel.md
+      - judgment/ADV303-pride-check.md
   - name: Decision Quality
     description: >-
       How to structure a decision, when to decide versus gather more, and how
@@ -55,6 +58,11 @@ categories:
     index: 500
     skills:
       - counsel/ADV501-steelmanning.md
+      - counsel/ADV502-hold-your-tongue.md
+      - counsel/ADV503-soft-answer.md
+      - counsel/ADV504-faithful-wound.md
+      - counsel/ADV505-who-you-are-talking-to.md
+      - counsel/ADV506-a-word-in-season.md
   - name: Challenge
     description: >-
       How to stress-test a plan or solution without being merely negative.
@@ -83,6 +91,7 @@ categories:
     index: 800
     skills:
       - strategy/ADV801-what-would-you-stop.md
+      - strategy/ADV802-guard-attention.md
   - name: Models and Frameworks
     description: >-
       Named mental models and frameworks drawn from books and practice — how
