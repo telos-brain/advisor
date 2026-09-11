@@ -1,11 +1,11 @@
 name: create_frame_of_reference
-version: 2
+version: 3
 description: >-
   Frames a problem before you have a solution. Returns a problem statement,
   contextual lens, domain model, bigger picture and considerations, grounded
   in advisor memory. Use when you are first facing a task or challenge and
   want things to think about. Do not use this to check a finished plan — use
-  ask_for_advice for that.
+  ask_sol for that.
 workflow:
   code: WF-FRAME-OF-REFERENCE
 parameters:

@@ -1,11 +1,11 @@
 ---
 name: Learning Eval (Run)
 code: WF-EVAL-RUN
-version: 6
+version: 7
 type: TRIGGERED
 description: >-
-  Manual workflow-run learning eval (BRA207 / BRA406). Grades a Completed run
-  from {{run.telemetry}} against a 0–100 rubric (job done efficiently 40 /
+  Automatic workflow-run learning eval (BRA207 / BRA406). Grades a Completed
+  run from {{run.telemetry}} against a 0–100 rubric (job done efficiently 40 /
   tool use 35 / skill use 25), persists the score with set_run_grading, and
   files each learning as a PENDING inbox entry (routing_type EVAL).
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
@@ -13,7 +13,7 @@ description: >-
 model: anthropic/claude-sonnet-4-6
 system-prompt-code: WF-SYSTEM-PROMPT
 trigger: workflowrun:complete
-trigger-mode: manual
+trigger-mode: automatic
 output-tokens: 4096, 8192, 16384
 caching: automatic
 max-turns: 20
@@ -24,10 +24,10 @@ tools:
 ---
 
 You are evaluating a single completed workflow run to extract learnings that will
-improve the brain over time. This workflow is run **manually** (admin clicks Run
-eval on a Completed run). Ground every claim in the telemetry below. The input
-message is only a short trigger — do not invent failures that are not in the
-logs.
+improve the brain over time. This workflow is enqueued automatically when a
+subject run reaches Completed. Ground every claim in the telemetry below. The
+input message is only a short trigger — do not invent failures that are not in
+the logs. Eval-of-eval loops are already excluded by the platform.
 
 ## Subject run
 

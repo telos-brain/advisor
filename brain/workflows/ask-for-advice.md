@@ -1,16 +1,15 @@
 ---
-name: Ask for Advice
+name: Ask Sol
 code: WF-ASK-FOR-ADVICE
 description: >-
-  Checks a proposed approach or piece of thinking and returns short, useful
-  guidance. Loads relevant skills, builds a frame of reference, and queries
-  memory. Use when you have a solution or plan and want a quality check — not
-  when you are still framing the problem.
-version: 3
+  Ask Sol to check a proposed approach or piece of thinking and return short,
+  useful guidance. Loads relevant skills, builds a frame of reference, and
+  queries memory. Use when you have a solution or plan and want a quality
+  check — not when you are still framing the problem.
+version: 4
 model: anthropic/claude-sonnet-4-6
 
-# TOOL: invoked via tools/execution/advisor/ask-for-advice.yml as
-# {{input.request}}.
+# TOOL: invoked via tools/execution/advisor/ask-sol.yml as {{input.request}}.
 type: TOOL
 
 system-prompt-code: WF-SYSTEM-PROMPT

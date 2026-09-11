@@ -1,9 +1,9 @@
 name: ask_question
-version: 2
+version: 3
 description: >-
   Asks one question against advisor memory and returns only what answers it.
   Use for a focused factual lookup (a preference, a past decision, a stored
-  fact). Do not use this for open-ended advice — use ask_for_advice.
+  fact). Do not use this for open-ended advice — use ask_sol.
 workflow:
   code: WF-ASK-QUESTION
 parameters:
