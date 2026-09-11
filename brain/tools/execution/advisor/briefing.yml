@@ -1,0 +1,17 @@
+name: briefing
+version: 1
+description: >-
+  Stores valued information in advisor memory. Use when you have notes from a
+  book, a conversation, a fact, a preference, a decision, or current context
+  that should be remembered. Searches for an existing entry first, then updates
+  or creates. Pass the information to file — do not pre-categorise.
+workflow:
+  code: WF-BRIEFING
+parameters:
+  - name: content
+    description: >-
+      The information to remember. Include enough raw detail to file well —
+      book notes, a conversation summary, a fact, a constraint, a decision,
+      or current context. Attribution (source, author, who said it) helps.
+    type: string
+    required: true

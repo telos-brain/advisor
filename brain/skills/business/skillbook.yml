@@ -1,0 +1,47 @@
+name: Business
+code: BUS
+prefix: BUS
+version: 2
+description: >-
+  Transferable business practices — how to sell, serve customers, run
+  operations, handle money, and lead. Skills are methods and standards, not
+  client-specific facts. Situation-specific commercial detail belongs in memory.
+categories:
+  - name: Sales
+    description: >-
+      How to find, qualify and convert demand — pipeline, conversations,
+      proposals, pricing conversations, and closing. Distinct from Customer
+      Management (after they are a customer) and from Finance (the numbers
+      behind a deal).
+    index: 100
+    skills: []
+  - name: Customer Management
+    description: >-
+      How to keep and grow a customer relationship — onboarding, communication,
+      retention, accounts, and handling tension. Distinct from Sales (winning
+      the work) and from Operations (delivering the work).
+    index: 200
+    skills: []
+  - name: Operations
+    description: >-
+      How work gets done day to day — delivery, process, capacity, quality,
+      and the systems that keep a small operation reliable. Distinct from
+      Finance (money) and from Strategy skills in the Advisory book (what
+      to do, not how the shop runs).
+    index: 300
+    skills: []
+  - name: Finance
+    description: >-
+      How money moves — cash, pricing, invoicing, margins, forecasting and
+      simple commercial hygiene. Distinct from Sales (the conversation) and
+      from Operations (the work that generates the invoice).
+    index: 400
+    skills: []
+  - name: Leadership
+    description: >-
+      How to set direction, make people decisions, and run a small team or
+      business. Covers hiring, accountability, and owner-operator judgment.
+      Distinct from the Advisory book's Counsel (how advice is given) and
+      from Operations (the work system).
+    index: 500
+    skills: []

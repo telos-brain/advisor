@@ -1,0 +1,7 @@
+name: Advisor
+description: >-
+  Workflow tools the advisor MCP exposes — briefing valued information into
+  memory, and asking for a short quality check on a proposed approach.
+tools:
+  - briefing.yml
+  - ask-for-advice.yml

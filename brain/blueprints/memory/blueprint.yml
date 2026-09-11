@@ -1,0 +1,52 @@
+name: Memory
+version: 2
+description: >-
+  General working memory for this advisor — facts, current context, preferences,
+  goals, decisions, insights, source notes and open questions. Briefings land
+  here. Distinct from skills, which hold transferable practices.
+scope: brain
+categories:
+  - name: Facts
+    description: >-
+      Durable facts about people, organisations, products, markets and
+      situations that stay true until they change. Names, roles, numbers,
+      structures, history. Distinct from Context (what is happening now) and
+      from Insights (interpreted meaning).
+  - name: Context
+    description: >-
+      The current situation and ongoing work — what is in play this week or
+      this quarter, live projects, recent events, and the backdrop for a
+      decision. Time-sensitive. Distinct from Facts (stable) and Goals
+      (desired future).
+  - name: Preferences
+    description: >-
+      Values, constraints, working style, risk appetite, non-negotiables, and
+      how advice should land. What this person or organisation cares about and
+      will not trade away. Distinct from Goals (outcomes) and Decisions
+      (commitments already made).
+  - name: Goals
+    description: >-
+      What they are trying to achieve and why it matters — outcomes, horizons,
+      success criteria, and what would count as progress. Distinct from
+      Preferences (how they want to operate) and Context (the current state).
+  - name: Decisions
+    description: >-
+      Decisions already made and the rationale, so later advice does not
+      relitigate them blindly. Include what was chosen, what was rejected, and
+      why. Distinct from Goals (intent) and Open questions (unresolved).
+  - name: Insights
+    description: >-
+      Distilled, reusable observations the advisor has learned and can draw on
+      again. Short, self-contained, titled so search can find them. Distinct
+      from Sources (attributed notes) and from skills (transferable practices).
+  - name: Sources
+    description: >-
+      Notes from books, articles, conversations, briefings and other material
+      the owner values. Attribute the source. Capture the useful ideas, not a
+      transcript. Distinct from Insights (we own the distillation) and from
+      skills (practices extracted for reuse).
+  - name: Open questions
+    description: >-
+      Unresolved questions worth returning to — things we do not yet know,
+      tensions not settled, and follow-ups. Distinct from Decisions (already
+      closed) and Context (current state, not a question).
