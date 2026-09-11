@@ -6,7 +6,7 @@ description: >-
   useful guidance. Loads relevant skills, builds a frame of reference, and
   queries memory. Use when you have a solution or plan and want a quality
   check — not when you are still framing the problem.
-version: 5
+version: 6
 model: anthropic/claude-sonnet-4-6
 
 # TOOL: invoked via tools/execution/advisor/ask-sol.yml as {{input.request}}.
@@ -18,6 +18,7 @@ output-tokens: 2048, 4096
 caching: automatic
 max-turns: 18
 thinking: adaptive
+session-timeout: 60
 max-runs-per-hour: 200
 
 tools:

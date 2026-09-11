@@ -5,7 +5,7 @@ description: >-
   Researches a topic from an inbox entry using web search, web fetch, skills,
   and memory. Compiles findings into a new PROCESSED inbox entry (no RESEARCH
   routing — prevents recursion).
-version: 3
+version: 4
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -23,6 +23,7 @@ output-tokens: 4096, 8192
 caching: automatic
 max-turns: 30
 thinking: effort
+session-timeout: 60
 max-runs-per-hour: 100
 
 tools:

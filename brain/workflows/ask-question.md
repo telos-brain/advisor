@@ -18,6 +18,7 @@ system-prompt-code: WF-SYSTEM-PROMPT
 output-tokens: 2048, 4096
 caching: automatic
 max-turns: 8
+session-timeout: 15
 
 # Blueprint tools only — this workflow must ground answers in memory.
 tools:

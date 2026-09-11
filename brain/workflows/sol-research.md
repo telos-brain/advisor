@@ -6,7 +6,7 @@ description: >-
   knowledge in advisor memory. Files transferable practices as inbox
   learnings (SKILL_UPDATE) so they can become skills. Returns a short
   summary.
-version: 2
+version: 3
 model: anthropic/claude-sonnet-4-6
 
 # TOOL: invoked via tools/execution/advisor/research.yml as {{input.query}}.
@@ -18,6 +18,7 @@ output-tokens: 4096, 8192
 caching: automatic
 max-turns: 28
 thinking: adaptive
+session-timeout: 60
 max-runs-per-hour: 100
 
 tools:

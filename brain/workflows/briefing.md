@@ -17,6 +17,7 @@ output-tokens: 2048, 4096
 caching: automatic
 max-turns: 16
 max-runs-per-hour: 200
+session-timeout: 15
 
 tools:
   - search_blueprint_entries

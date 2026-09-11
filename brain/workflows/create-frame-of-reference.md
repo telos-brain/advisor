@@ -19,6 +19,7 @@ system-prompt-code: WF-SYSTEM-PROMPT
 output-tokens: 2048, 4096
 caching: automatic
 max-turns: 12
+session-timeout: 15
 
 # Glossary is built from {{#blueprint.entries}} (title + version/centrality).
 # Retrieval uses blueprint search — ask_question is a separate workflow-tool.

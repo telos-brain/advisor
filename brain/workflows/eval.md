@@ -1,13 +1,14 @@
 ---
 name: Learning Eval (Run)
 code: WF-EVAL-RUN
-version: 7
+version: 8
 type: TRIGGERED
 description: >-
-  Automatic workflow-run learning eval (BRA207 / BRA406). Grades a Completed
-  run from {{run.telemetry}} against a 0–100 rubric (job done efficiently 40 /
-  tool use 35 / skill use 25), persists the score with set_run_grading, and
-  files each learning as a PENDING inbox entry (routing_type EVAL).
+  Automatic workflow-run learning eval (BRA207 / BRA406). Loads the subject
+  workflow, grades the Completed run from telemetry against a 0–100
+  rubric (job done efficiently 40 / tool use 35 / skill use 25), persists the
+  score with set_run_grading, and files each learning as a PENDING inbox
+  entry (routing_type EVAL).
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -16,9 +17,10 @@ trigger: workflowrun:complete
 trigger-mode: automatic
 output-tokens: 4096, 8192, 16384
 caching: automatic
-max-turns: 20
+max-turns: 22
 max-runs-per-hour: 500
 tools:
+  - get_schema_file
   - create_inbox_entry
   - set_run_grading
 ---
@@ -41,18 +43,37 @@ Subject entity: **{{entity.name}}**
 {{run.telemetry}}
 </run_telemetry>
 
-The telemetry is the subject run being graded. When you create inbox entries,
-take `workflow_name` and `unit_of_work_name` from it.
+The telemetry is the **subject** run being graded — not this eval. When you
+create inbox entries, take `workflow_name` and `unit_of_work_name` from it.
 
-## Step 1: Reconstruct the run
+## Step 1: Load the subject workflow
 
-1. Establish what the agent was asked to do and whether it succeeded.
+Do this **before** you reconstruct or score. The intended job lives in the
+subject workflow file, not in a guess from the user message.
+
+1. Read the schema path from the telemetry. Use `workflowPath` if present,
+   otherwise `resource["telos.workflow.path"]`.
+2. Call `get_schema_file` **once** with that exact `path`. Do not call
+   `list_schema_files` or `search_schema_files`. Do not guess a path from
+   this eval's own code.
+3. From the loaded file, extract the **intent**: name, description, type,
+   declared tools / skills, and what the instructions treat as success.
+
+If the path is missing or `get_schema_file` fails, say so and continue from
+telemetry only. Do not invent a workflow.
+
+## Step 2: Reconstruct the run
+
+Grade against the intent from Step 1.
+
+1. Establish what the workflow asked the agent to do, and whether the run
+   did that.
 2. Rebuild the sequence of tool calls and results from the telemetry.
 3. Note any skill search (`find_available_skills`) / load (`get_skill`) activity.
 4. Note cost signals where present: turn count, output size, repeated work that
    burned tokens without advancing the goal.
 
-## Step 2: Review tool performance
+## Step 3: Review tool performance
 
 Assess tool use with concrete evidence (tool name + what was called):
 
@@ -61,18 +82,19 @@ Assess tool use with concrete evidence (tool name + what was called):
    repeated, re-fetching data already returned).
 2. **Appropriate data** — Did each result advance the task? Note errors, empty
    results, or blind retries.
-3. **Right tool** — Was the correct tool chosen?
+3. **Right tool** — Was the correct tool chosen, given the workflow's
+   declared tools and instructions?
 4. **Sequencing & batching** — Were independent calls issued together? Were
    dependent calls ordered correctly (lookup before act)?
 
-## Step 3: Review skill performance
+## Step 4: Review skill performance
 
 Assess skill use with evidence (skill codes where present):
 
 1. **Requested vs loaded** — What was searched for, and what was actually loaded
    and followed?
-2. **Coverage** — Given the task, were the right skills found and applied, or
-   was skill lookup skipped in favour of general knowledge?
+2. **Coverage** — Given the workflow's intent, were the right skills found
+   and applied, or was skill lookup skipped in favour of general knowledge?
 3. **Gaps** — Name any skill that would have improved the result. Distinguish:
    - **Behaviour gap** — a suitable skill exists and should have been loaded
    - **Library gap** — no suitable skill exists (do not penalise the agent; flag
@@ -80,19 +102,21 @@ Assess skill use with evidence (skill codes where present):
 4. **Depth** — Were skill cross-references followed, or did the agent stop at
    the first skill?
 
-## Step 4: Score with the rubric (0–100)
+## Step 5: Score with the rubric (0–100)
 
 Assign points in each category below, then sum to a single **integer grade from
-0 to 100**. Base every deduction on evidence from Steps 1–3. Category A uses
-goal/outcome from Step 1 plus wasted-effort and cost signals; B uses Step 2; C
-uses Step 3.
+0 to 100**. Base every deduction on evidence from Steps 1–4. Category A uses
+intent from Step 1 and outcome from Step 2 plus wasted-effort and cost
+signals; B uses Step 3; C uses Step 4.
 
 ### Scoring rubric (100 points total)
 
 #### A. Job done efficiently (goal + cost) — 40 points
 
-The single most important question: did the session achieve the user's /
-workflow's goal, and at what cost (turns, redundant work, token burn)?
+The single most important question: did the session achieve the **subject
+workflow's** goal (from the file you loaded), and at what cost (turns,
+redundant work, token burn)? Do not substitute a different goal inferred
+only from the user message.
 
 | Band | Points | Criteria |
 | --- | --- | --- |
@@ -105,7 +129,7 @@ workflow's goal, and at what cost (turns, redundant work, token burn)?
 #### B. Tool use — 35 points
 
 Efficiency, correctness, right tool for the job, and sequencing/batching
-(Step 2).
+(Step 3).
 
 | Band | Points | Criteria |
 | --- | --- | --- |
@@ -118,7 +142,7 @@ Efficiency, correctness, right tool for the job, and sequencing/batching
 #### C. Skill use — 25 points
 
 Whether the right skills were found (`find_available_skills`), loaded and
-followed (`get_skill`), with no quality-improving gaps (Step 3).
+followed (`get_skill`), with no quality-improving gaps (Step 4).
 
 | Band | Points | Criteria |
 | --- | --- | --- |
@@ -151,13 +175,13 @@ Admin UI traffic light (for awareness; do not change how you score): **Green**
 80–100 · **Orange** 50–79 · **Red** 0–49.
 
 Write a one-line rationale for the integer you chose (optionally note A/B/C
-sub-scores). Persist the score only via `set_run_grading` in Step 6.
+sub-scores). Persist the score only via `set_run_grading` in Step 7.
 
-## Step 5: Record learnings as inbox entries
+## Step 6: Record learnings as inbox entries
 
-Identify discrete, actionable learnings from Steps 2–3. If the run was clean and
+Identify discrete, actionable learnings from Steps 3–4. If the run was clean and
 there is nothing to improve, create **no** entries and say so — you still must
-call `set_run_grading` in Step 6.
+call `set_run_grading` in Step 7.
 
 Create **separate** `EVAL` entries when both a skill finding and a
 tool/workflow finding apply.
@@ -177,22 +201,22 @@ For each learning, call `create_inbox_entry` **exactly once** with:
 
 Omit a field only when the telemetry (or entity tag) does not have it.
 
-Capture the returned **entry reference** (8-character code) for Step 6.
+Capture the returned **entry reference** (8-character code) for Step 7.
 
-## Step 6: Persist the grade
+## Step 7: Persist the grade
 
 Call `set_run_grading` **exactly once** with:
 
 - `run_reference` — the subject reference from **Subject run** above
   (`{{run.reference}}`). Paste that exact value. Do **not** use the shortened
   Guid `runId` from telemetry.
-- `grading` — the integer 0–100 from Step 4
+- `grading` — the integer 0–100 from Step 5
 - `inbox_entry_reference` — optional; the primary learning's reference from
-  Step 5 when one exists (links the traffic-light grade tag to that finding)
+  Step 6 when one exists (links the traffic-light grade tag to that finding)
 
 Re-evaluation overwrites the previous grade.
 
-## Step 7: Reply
+## Step 8: Reply
 
 Reply with one or two lines: the integer grade and band, a short rationale, and
 how many inbox learnings you recorded. Do not create duplicate entries for the
