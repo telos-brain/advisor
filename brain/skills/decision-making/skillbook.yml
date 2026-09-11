@@ -1,7 +1,7 @@
 name: Decision Making
 code: DEC
 prefix: DEC
-version: 3
+version: 4
 description: >-
   How to make and review decisions — critical thinking techniques, diagnosis,
   assumptions, uncertainty, options, risk, commitment and after-the-fact
@@ -60,6 +60,7 @@ categories:
       - options/DEC501-refuse-the-false-binary.md
       - options/DEC502-name-the-opportunity-cost.md
       - options/DEC503-second-order-effects.md
+      - options/DEC504-count-the-cost.md
   - name: Risk and Proportionality
     description: >-
       How to match the depth of analysis to the stakes — impact, reversibility,
@@ -82,6 +83,8 @@ categories:
       - process/DEC702-when-information-will-not-help.md
       - process/DEC703-plans-need-other-minds.md
       - process/DEC704-do-not-boast-about-tomorrow.md
+      - process/DEC705-enough-is-a-decision.md
+      - process/DEC706-do-not-go-back-to-the-hole.md
   - name: Review and Learning
     description: >-
       How to review a decision or a completed piece of work so the reasoning
@@ -93,6 +96,7 @@ categories:
     skills:
       - review/DEC801-extract-the-lesson.md
       - review/DEC802-receive-correction.md
+      - review/DEC803-a-next-step-or-it-is-not-advice.md
   - name: Decision Frameworks
     description: >-
       Named decision models and frameworks from books and practice — how

@@ -1,7 +1,7 @@
 name: Advisory
 code: ADV
 prefix: ADV
-version: 4
+version: 5
 description: >-
   The craft of advising — how to think, frame, judge, decide and counsel.
   Skills are transferable practices, not types of advice. Domain knowledge from
@@ -29,6 +29,7 @@ categories:
     skills:
       - framing/ADV201-bound-the-ask.md
       - framing/ADV202-questions-that-change-this.md
+      - framing/ADV203-hear-the-other-side.md
   - name: Judgment and Trade-offs
     description: >-
       How to weigh options — opportunity cost, second-order effects, what you
@@ -40,6 +41,7 @@ categories:
       - judgment/ADV301-rule-your-spirit.md
       - judgment/ADV302-stay-out-of-the-quarrel.md
       - judgment/ADV303-pride-check.md
+      - judgment/ADV304-check-your-own-fault-first.md
   - name: Decision Quality
     description: >-
       How to structure a decision, when to decide versus gather more, and how
@@ -63,6 +65,9 @@ categories:
       - counsel/ADV504-faithful-wound.md
       - counsel/ADV505-who-you-are-talking-to.md
       - counsel/ADV506-a-word-in-season.md
+      - counsel/ADV507-quick-to-hear.md
+      - counsel/ADV508-mean-the-word.md
+      - counsel/ADV509-take-it-to-them.md
   - name: Challenge
     description: >-
       How to stress-test a plan or solution without being merely negative.
@@ -73,6 +78,7 @@ categories:
     skills:
       - challenge/ADV601-pre-mortem-the-plan.md
       - challenge/ADV602-killing-constraint.md
+      - challenge/ADV603-see-the-danger-and-step-aside.md
   - name: Synthesis
     description: >-
       How to pull threads together, see the bigger picture, and say what the
@@ -92,6 +98,8 @@ categories:
     skills:
       - strategy/ADV801-what-would-you-stop.md
       - strategy/ADV802-guard-attention.md
+      - strategy/ADV803-one-aim.md
+      - strategy/ADV804-fear-of-a-person-is-a-snare.md
   - name: Models and Frameworks
     description: >-
       Named mental models and frameworks drawn from books and practice — how
