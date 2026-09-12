@@ -6,7 +6,7 @@ description: >-
   exposed as workflow tools), wiring, and other structural schema fixes outside
   skill-craft and simple workflow/tool edits. High learning mode and inbox
   weight 5 or higher.
-version: 7
+version: 8
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -42,14 +42,6 @@ tools:
 
 injected-skills:
   - BRA105
-
-available-skills:
-  - BRA101
-  - BRA103
-  - BRA201
-  - BRA203
-  - BRA204
-  - BRA208
 ---
 
 # Instructions

@@ -5,7 +5,7 @@ description: >-
   Autonomously applies learnings to workflow instructions and tool definitions
   (create or update). Triggered for WORKFLOW_UPDATE and TOOL_UPDATE at high
   learning mode when inbox weight is 5 or higher.
-version: 7
+version: 8
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -42,11 +42,6 @@ tools:
 
 injected-skills:
   - BRA105
-
-available-skills:
-  - BRA201
-  - BRA203
-  - BRA204
 ---
 
 # Instructions

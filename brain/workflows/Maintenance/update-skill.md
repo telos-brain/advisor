@@ -5,7 +5,7 @@ description: >-
   Autonomously extracts transferable skill knowledge from an inbox entry and
   creates or updates skills (and rarely categories) via schema tools. Source
   material comes from {{inboxEntry.body}}; skill book structure is injected.
-version: 10
+version: 11
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -40,12 +40,6 @@ tools:
 
 injected-skills:
   - BRA105
-
-available-skills:
-  - BRA103
-  - BRA201
-  - BRA203
-  - BRA208
 ---
 
 # Instructions

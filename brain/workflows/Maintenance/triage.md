@@ -9,7 +9,7 @@ description: >-
   skill craft, workflow/tool fixes, brain self-management, and research asks to
   the matching workflows, and creates review_blueprint tasks for clear category
   matches — without repeating the entry body into maintenance task instructions.
-version: 13
+version: 14
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -35,12 +35,6 @@ tools:
 
 injected-skills:
   - BRA105
-
-available-skills:
-  - BRA103
-  - BRA201
-  - BRA405
-  - BRA413
 ---
 
 # Instructions
