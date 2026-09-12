@@ -1,20 +1,23 @@
 ---
 name: Learning Eval (Run)
 code: WF-EVAL-RUN
-version: 9
-type: TRIGGERED
+version: 11
+type: EVAL
 description: >-
-  Automatic workflow-run learning eval (BRA207 / BRA406). Loads the subject
-  workflow, grades the Completed run from telemetry against a 0–100
-  rubric (job done efficiently 40 / tool use 35 / skill use 25), persists the
-  score with set_run_grading, and files each learning as a PENDING inbox
-  entry (routing_type EVAL).
+  Workflow-run learning eval (BRA207 / BRA406). Auto-enqueues when an Ask
+  Sol (WF-ASK-FOR-ADVICE) run completes and the brain learning mode is high.
+  Loads the subject workflow, grades the Completed run from telemetry against
+  a 0–100 rubric (job done efficiently 40 / tool use 35 / skill use 25),
+  persists the score with set_run_grading, and files each learning as a
+  PENDING inbox entry (routing_type EVAL).
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
 system-prompt-code: WF-SYSTEM-PROMPT
-trigger: workflowrun:complete
-trigger-mode: manual
+# type EVAL = Run eval button on any evaluable run (trigger ignored there).
+# The :high qualifier is what enables auto enqueue; WF-ASK-FOR-ADVICE limits
+# that path to Ask Sol only (BRA207 §2).
+trigger: workflowrun:complete:WF-ASK-FOR-ADVICE:high
 output-tokens: 4096, 8192, 16384
 caching: automatic
 max-turns: 22
@@ -25,11 +28,12 @@ tools:
   - set_run_grading
 ---
 
-You are evaluating a single completed workflow run to extract learnings that will
-improve the brain over time. This workflow is enqueued automatically when a
-subject run reaches Completed. Ground every claim in the telemetry below. The
-input message is only a short trigger — do not invent failures that are not in
-the logs. Eval-of-eval loops are already excluded by the platform.
+You are evaluating a single completed Ask Sol (`WF-ASK-FOR-ADVICE`) run to
+extract learnings that will improve the brain over time. This workflow is
+enqueued automatically when that subject run reaches Completed and the brain
+learning mode is high. Ground every claim in the telemetry below. The input
+message is only a short trigger — do not invent failures that are not in the
+logs. Eval-of-eval loops are already excluded by the platform.
 
 ## Subject run
 
