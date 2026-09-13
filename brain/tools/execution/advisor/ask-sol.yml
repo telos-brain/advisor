@@ -1,12 +1,13 @@
 name: ask_sol
-version: 2
+version: 3
 description: >-
-  Ask Sol — the advisor — to check a proposed approach, plan or piece of
-  thinking. Sol applies critical thinking and returns a short list of
-  guidance: gaps, things to consider, where more work is needed. Use when
-  you already have a solution and want a quality check, the way you would
-  ring Sol and say "this is what I'm thinking." Do not use this to frame a
-  new problem; use create_frame_of_reference for that.
+  Ask Sol — the advisor — to sit with a proposed approach, plan or piece
+  of thinking. Sol frames it, checks memory, loads relevant skills, and
+  returns a few coaching questions plus relevant principles. Not a
+  recommended plan and not a rewrite. Use when you already have something
+  to check, the way you would ring Sol and say "this is what I'm thinking."
+  Do not use this to frame a new problem; use create_frame_of_reference
+  for that.
 workflow:
   code: WF-ASK-FOR-ADVICE
 parameters:

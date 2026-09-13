@@ -1,15 +1,15 @@
 ---
 name: Learning Eval (Run)
 code: WF-EVAL-RUN
-version: 11
+version: 13
 type: EVAL
 description: >-
   Workflow-run learning eval (BRA207 / BRA406). Auto-enqueues when an Ask
   Sol (WF-ASK-FOR-ADVICE) run completes and the brain learning mode is high.
-  Loads the subject workflow, grades the Completed run from telemetry against
-  a 0–100 rubric (job done efficiently 40 / tool use 35 / skill use 25),
-  persists the score with set_run_grading, and files each learning as a
-  PENDING inbox entry (routing_type EVAL).
+  Grades the Completed run from telemetry on whether memory and skills
+  produced good advice (advice 40 / memory 30 / skills 30), persists the
+  score with set_run_grading, and files each learning as a PENDING inbox
+  entry (routing_type EVAL).
 # Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
 # compose llm-model wins when that credential exists (BRA210).
 model: anthropic/claude-sonnet-4-6
@@ -28,12 +28,21 @@ tools:
   - set_run_grading
 ---
 
-You are evaluating a single completed Ask Sol (`WF-ASK-FOR-ADVICE`) run to
-extract learnings that will improve the brain over time. This workflow is
-enqueued automatically when that subject run reaches Completed and the brain
-learning mode is high. Ground every claim in the telemetry below. The input
-message is only a short trigger — do not invent failures that are not in the
-logs. Eval-of-eval loops are already excluded by the platform.
+You are evaluating a single completed Ask Sol (`WF-ASK-FOR-ADVICE`) run.
+The only question that matters: did the run use **memory** and **skills**
+to give **good advice**?
+
+Good advice here is not a recommended plan. It is a short coaching reply
+— pointed questions and relevant principles — produced by analysing the
+request against a frame of reference, retrieved memory, and loaded skill
+bodies. Ungrounded opinion is not advice. A rewrite of their work is not
+advice.
+
+This workflow is enqueued automatically when that subject run reaches
+Completed and the brain learning mode is high. Ground every claim in the
+telemetry below. The input message is only a short trigger — do not invent
+failures that are not in the logs. Eval-of-eval loops are already excluded
+by the platform.
 
 ## Subject run
 
@@ -52,143 +61,177 @@ create inbox entries, take `workflow_name` and `unit_of_work_name` from it.
 
 ## Step 1: Load the subject workflow
 
-Do this **before** you reconstruct or score. The intended job lives in the
-subject workflow file, not in a guess from the user message.
+Do this **before** you reconstruct or score. The current process and reply
+shape live in the subject workflow file.
 
 1. Read the schema path from the telemetry. Use `workflowPath` if present,
    otherwise `resource["telos.workflow.path"]`.
 2. Call `get_schema_file` **once** with that exact `path`. Do not call
    `list_schema_files` or `search_schema_files`. Do not guess a path from
    this eval's own code.
-3. From the loaded file, extract the **intent**: name, description, type,
-   declared tools / skills, and what the instructions treat as success.
+3. From the loaded file, note the declared tools and what the instructions
+   treat as success (process order and reply contract). Grade against that
+   contract. Do not invent a different job from the user message.
 
 If the path is missing or `get_schema_file` fails, say so and continue from
-telemetry only. Do not invent a workflow.
+telemetry only, using the definition of good advice above.
 
 ## Step 2: Reconstruct the run
 
-Grade against the intent from Step 1.
+Rebuild, with evidence (tool name + arguments + what came back):
 
-1. Establish what the workflow asked the agent to do, and whether the run
-   did that.
-2. Rebuild the sequence of tool calls and results from the telemetry.
-3. Note any skill search (`find_available_skills`) / load (`get_skill`) activity.
-4. Note cost signals where present: turn count, output size, repeated work that
-   burned tokens without advancing the goal.
+1. **Frame** — was `create_frame_of_reference` called, and with what
+   context? What considerations did it return?
+2. **Memory questions** — which `ask_question` (or blueprint) calls
+   followed? Did the questions follow from the frame, or were they generic?
+   What did memory actually return?
+3. **Skills** — when was `find_available_skills` called, and with what
+   query? Which skills were loaded with `get_skill`? Was lookup *after*
+   the frame and memory answers?
+4. **Reply** — what did the run return? Questions, principles, a
+   recommended plan, a rewrite, or something else?
+5. **Cost** — turn count, repeated work, or token burn that did not
+   advance the advice. Note it; only deduct under A if waste crowded out
+   the job.
 
-## Step 3: Review tool performance
+## Step 3: Review memory
 
-Assess tool use with concrete evidence (tool name + what was called):
+Ask Sol's experience of *this situation* comes from memory. Assess with
+evidence:
 
-1. **Efficiency** — Was each call necessary, or redundant? Flag cases where
-   multiple calls were used when one would have been enough (same lookup
-   repeated, re-fetching data already returned).
-2. **Appropriate data** — Did each result advance the task? Note errors, empty
-   results, or blind retries.
-3. **Right tool** — Was the correct tool chosen, given the workflow's
-   declared tools and instructions?
-4. **Sequencing & batching** — Were independent calls issued together? Were
-   dependent calls ordered correctly (lookup before act)?
+1. **Frame first** — `create_frame_of_reference` before memory questions
+   and skill search. The frame is used internally; dumping it in the reply
+   is a miss.
+2. **Questions from the frame** — `ask_question` calls are driven by the
+   frame (considerations, constraints, past decisions, similar situations,
+   preferences, goals). Generic or request-echo questions are weak.
+3. **Used what came back** — the reply reflects retrieved memory, or
+   honestly says evidence was thin. Inventing "what we usually do" is a
+   fail. Empty answers should be dropped, not padded.
+4. **Not skipped** — framing or memory lookup omitted is a behaviour gap.
 
-## Step 4: Review skill performance
+## Step 4: Review skills
 
-Assess skill use with evidence (skill codes where present):
+Ask Sol's transferable experience comes from skills. Assess with evidence
+(skill codes where present):
 
-1. **Requested vs loaded** — What was searched for, and what was actually loaded
-   and followed?
-2. **Coverage** — Given the workflow's intent, were the right skills found
-   and applied, or was skill lookup skipped in favour of general knowledge?
-3. **Gaps** — Name any skill that would have improved the result. Distinguish:
-   - **Behaviour gap** — a suitable skill exists and should have been loaded
-   - **Library gap** — no suitable skill exists (do not penalise the agent; flag
-     as a learning)
-4. **Depth** — Were skill cross-references followed, or did the agent stop at
-   the first skill?
+1. **After context** — `find_available_skills` runs *after* the frame and
+   memory answers. The query uses the request, the frame, and what memory
+   revealed — not only the first sentence of the request.
+2. **Loaded, not stubbed** — matching skills were loaded with `get_skill`
+   before they shaped questions or principles. Advising from stubs or from
+   a skill not loaded this run is a fail. Do not invent skill codes.
+3. **Applied** — principles (and the bite of the questions) are traceable
+   to loaded skill bodies. A skill loaded and then ignored is a miss.
+   Loading a pile of skills that were not drawn on is a miss.
+4. **Gaps** — name any skill that would have improved the advice.
+   Distinguish:
+   - **Behaviour gap** — a suitable skill exists and should have been
+     loaded or followed
+   - **Library gap** — no suitable skill exists (do not penalise the
+     agent; flag as a learning)
+5. Ignore Telos Brain (BRA) platform skills unless the request was about
+   this brain.
 
-## Step 5: Score with the rubric (0–100)
+Skill lookup is part of the job. Do not award a free pass for "no skill
+applicable" unless search was done and nothing relevant existed — then
+treat it as a library gap, not a process skip.
 
-Assign points in each category below, then sum to a single **integer grade from
-0 to 100**. Base every deduction on evidence from Steps 1–4. Category A uses
-intent from Step 1 and outcome from Step 2 plus wasted-effort and cost
-signals; B uses Step 3; C uses Step 4.
+## Step 5: Review the advice
+
+Judge the final reply against the loaded workflow's success contract and
+the definition of good advice above.
+
+1. **Shape** — coaching questions, then relevant principles. Not a
+   recommended plan, not a rewrite, not a frame dump, not an essay.
+2. **Questions** — pointed and specific to this request. Feedback as
+   questions, not advice in question form ("Have you thought about doing
+   X?"). If the thinking was already sound, fewer questions — not invented
+   problems.
+3. **Principles** — short one-liners; ranked by relevance; at most five
+   (the top-ranked if more applied); each skill-sourced principle cites
+   `(skill XX123)` with a code that was loaded this run; stated as
+   something both sides can agree with, not as an instruction to apply
+   them. Missing cites, invented codes, or an unranked dump are misses.
+4. **Grounding** — a reader can see the questions and principles coming
+   from the frame, the memory answers, and the loaded skills. If evidence
+   was thin, the reply said so.
+
+## Step 6: Score with the rubric (0–100)
+
+Assign points in each category below, then sum to a single **integer grade
+from 0 to 100**. Base every deduction on evidence from Steps 2–5.
 
 ### Scoring rubric (100 points total)
 
-#### A. Job done efficiently (goal + cost) — 40 points
+#### A. The advice — 40 points
 
-The single most important question: did the session achieve the **subject
-workflow's** goal (from the file you loaded), and at what cost (turns,
-redundant work, token burn)? Do not substitute a different goal inferred
-only from the user message.
+Did the run produce good advice — a short, grounded coaching reply?
 
 | Band | Points | Criteria |
 | --- | --- | --- |
-| Excellent | 36–40 | Goal fully achieved; near-minimal steps; no dead ends or repeated retries; outcome correct and complete; cost proportionate. |
-| Good | 28–35 | Goal achieved; a little wasted effort or cost (one or two avoidable steps) but no material impact on the result. |
-| Adequate | 18–27 | Goal mostly achieved, or achieved via noticeably bloated effort / cost (several redundant steps, minor dead ends). |
-| Weak | 8–17 | Goal only partially achieved, or correct outcome reached through heavy wasted effort / repeated retries / high cost. |
-| Failed | 0–7 | Goal missed, wrong result delivered, or session abandoned. |
+| Excellent | 36–40 | Questions and principles are pointed, relevant, and clearly grounded; skill-sourced principles cited; no plan or rewrite; phone-call short. |
+| Good | 28–35 | Advice is useful and mostly grounded; a small miss (one generic question, one preachy principle, slightly long). |
+| Adequate | 18–27 | A coaching reply is present, but several items are generic, ungrounded, or slide into recommendations. |
+| Weak | 8–17 | Reply is mostly a plan, a rewrite, or opinion that does not use what was retrieved. |
+| Failed | 0–7 | No usable advice, or the session was abandoned. |
 
-#### B. Tool use — 35 points
+Severe wasted effort that crowded out the job may drop a band; ordinary
+cost is not a reason to.
 
-Efficiency, correctness, right tool for the job, and sequencing/batching
-(Step 3).
+#### B. Memory — 30 points
 
-| Band | Points | Criteria |
-| --- | --- | --- |
-| Excellent | 32–35 | Every call necessary and well-chosen; correct tool each time; independent calls batched, dependent calls ordered; no redundant repeats; errors handled sensibly. |
-| Good | 25–31 | Mostly efficient; at most one redundant call or minor serial-vs-batch miss; tool choices correct. |
-| Adequate | 16–24 | Some clear redundancy (e.g. the same lookup re-run with trivial arg changes) or a sub-optimal tool choice, but the data still advanced the task. |
-| Weak | 7–15 | Frequent redundant calls, blind retries on errors/empty results, or repeatedly wrong tool choices. |
-| Poor | 0–6 | Tool use actively obstructed the task (wrong tools throughout, ignored errors, churned without progress). |
-
-#### C. Skill use — 25 points
-
-Whether the right skills were found (`find_available_skills`), loaded and
-followed (`get_skill`), with no quality-improving gaps (Step 4).
+Did the run build and use a frame, then ask memory the questions that
+frame required?
 
 | Band | Points | Criteria |
 | --- | --- | --- |
-| Excellent | 23–25 | Right skills searched for, loaded, and followed; relevant cross-references pursued; no behaviour gap. |
-| Good | 18–22 | Relevant skills found and applied; at most a minor depth gap (stopped at first skill when a cross-reference would have helped). |
-| Adequate | 11–17 | Some relevant skill use, but a quality-improving skill that exists was not loaded, OR skills were loaded but only partially followed. |
-| Weak | 4–10 | Skill-lookup largely skipped; fell back on general knowledge where a skill clearly applied. |
-| Poor / N/A handling | 0–3 | No skill lookup attempted despite the task warranting it. **If the task genuinely required no skill, award full 25 and note "no skill applicable" rather than scoring this band.** |
+| Excellent | 27–30 | Frame first; memory questions follow its considerations; answers used in the reply or honestly marked thin. |
+| Good | 21–26 | Frame and memory questions happened; one weak query or a light under-use of what came back. |
+| Adequate | 14–20 | Some memory use, but questions were generic, the frame was skipped or dumped, or answers were ignored. |
+| Weak | 6–13 | Memory largely skipped; reply invented situation knowledge. |
+| Failed | 0–5 | No frame and no memory lookup despite the workflow requiring both. |
 
-> **Skill not applicable:** when the task legitimately needs no skill, do not
-> penalise category C — award its full 25 points and record the reason.
-> Distinguish a *behaviour gap* (a suitable skill exists and should have been
-> loaded → penalise) from a *library gap* (no suitable skill exists → do not
-> penalise the agent; flag it as the learning).
+#### C. Skills — 30 points
+
+Did the run find, load, and apply the skills that would change the
+questions or principles?
+
+| Band | Points | Criteria |
+| --- | --- | --- |
+| Excellent | 27–30 | Search after context; right skills loaded and followed; principles traceable to those bodies and cited `(skill XX123)`; no behaviour gap. |
+| Good | 21–26 | Relevant skills found and applied; a minor miss (late search, one unused load, or one skipped cross-reference that would have helped). |
+| Adequate | 14–20 | Some skill use, but a quality-improving skill that exists was not loaded, or skills were loaded and barely used. |
+| Weak | 6–13 | Skill lookup largely skipped; principles or questions came from general knowledge where a skill applied. |
+| Failed | 0–5 | No skill search despite the job requiring it. |
 
 ### Mapping the total to a grade
 
-The summed total (0–100) is the score, but confirm it lands in the right overall
-band before recording:
+The summed total (0–100) is the score, but confirm it lands in the right
+overall band before recording:
 
 | Score | Meaning |
 | --- | --- |
-| 90–100 | Goal achieved with clean, minimal, well-chosen tool and skill use. |
-| 70–89 | Goal achieved with minor inefficiency or a small skill/tool gap. |
-| 50–69 | Goal achieved but with notable wasted effort/cost, or partially achieved with sound process. |
-| 31–49 | Significant problems: heavy redundancy, wrong tools, or material skill gaps that degraded the result. |
-| 0–30 | Clear failure: goal missed, badly wrong tools, skills ignored, or pervasive wasted effort. |
+| 90–100 | Good advice, grounded in well-used memory and skills. |
+| 70–89 | Advice landed, with a small memory or skill gap. |
+| 50–69 | Partial advice, or sound process that did not quite produce it. |
+| 31–49 | Material memory or skill failure that degraded the advice. |
+| 0–30 | Clear failure: no real advice, memory and skills ignored, or invented experience. |
 
 Admin UI traffic light (for awareness; do not change how you score): **Green**
 80–100 · **Orange** 50–79 · **Red** 0–49.
 
 Write a one-line rationale for the integer you chose (optionally note A/B/C
-sub-scores). Persist the score only via `set_run_grading` in Step 7.
+sub-scores). Persist the score only via `set_run_grading` in Step 8.
 
-## Step 6: Record learnings as inbox entries
+## Step 7: Record learnings as inbox entries
 
-Identify discrete, actionable learnings from Steps 3–4. If the run was clean and
-there is nothing to improve, create **no** entries and say so — you still must
-call `set_run_grading` in Step 7.
+Identify discrete, actionable learnings from Steps 3–5. If the run was
+clean and there is nothing to improve, create **no** entries and say so —
+you still must call `set_run_grading` in Step 8.
 
-Create **separate** `EVAL` entries when both a skill finding and a
-tool/workflow finding apply.
+Create **separate** `EVAL` entries when a skill finding, a memory finding,
+and a workflow or reply finding all apply.
 
 For each learning, call `create_inbox_entry` **exactly once** with:
 
@@ -205,23 +248,24 @@ For each learning, call `create_inbox_entry` **exactly once** with:
 
 Omit a field only when the telemetry (or entity tag) does not have it.
 
-Capture the returned **entry reference** (8-character code) for Step 7.
+Capture the returned **entry reference** (8-character code) for Step 8.
 
-## Step 7: Persist the grade
+## Step 8: Persist the grade
 
 Call `set_run_grading` **exactly once** with:
 
 - `run_reference` — the subject reference from **Subject run** above
   (`{{run.reference}}`). Paste that exact value. Do **not** use the shortened
   Guid `runId` from telemetry.
-- `grading` — the integer 0–100 from Step 5
+- `grading` — the integer 0–100 from Step 6
 - `inbox_entry_reference` — optional; the primary learning's reference from
-  Step 6 when one exists (links the traffic-light grade tag to that finding)
+  Step 7 when one exists (links the traffic-light grade tag to that finding)
 
 Re-evaluation overwrites the previous grade.
 
-## Step 8: Reply
+## Step 9: Reply
 
-Reply with one or two lines: the integer grade and band, a short rationale, and
-how many inbox learnings you recorded. Do not create duplicate entries for the
+Reply with one or two lines: the integer grade and band, a short rationale
+(what the advice was like, and how memory and skills were used), and how
+many inbox learnings you recorded. Do not create duplicate entries for the
 same learning.
