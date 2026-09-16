@@ -7,7 +7,6 @@ description: >-
   learnings (SKILL_UPDATE) so they can become skills. Returns a short
   summary.
 version: 3
-model: anthropic/claude-sonnet-4-6
 
 # TOOL: invoked via tools/execution/advisor/research.yml as {{input.query}}.
 type: TOOL

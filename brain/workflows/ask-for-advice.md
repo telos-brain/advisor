@@ -8,7 +8,6 @@ description: >-
   a recommended plan. Use when you have something to check — not when you
   are still framing the problem.
 version: 10
-model: anthropic/claude-sonnet-4-6
 
 # TOOL: invoked via tools/execution/advisor/ask-sol.yml as {{input.request}}.
 type: TOOL

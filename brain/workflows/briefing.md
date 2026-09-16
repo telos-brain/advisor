@@ -6,7 +6,6 @@ description: >-
   existing entry first, then updates or creates. Use to store notes from books,
   conversations, facts, preferences, decisions and context.
 version: 1
-model: anthropic/claude-sonnet-4-6
 
 # TOOL: invoked via tools/execution/advisor/briefing.yml as {{input.content}}.
 type: TOOL

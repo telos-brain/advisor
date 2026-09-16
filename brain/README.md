@@ -74,22 +74,14 @@ Sign the user up through the public Management API.
 
 Cloud deploy talks to `https://go.telosbrain.com` by default (`TELOS_BRAIN_API_URL` in `.env.example`).
 
-### 2. An LLM key (Claude or Grok)
+### 2. LLM (optional — recommended)
 
-Sol's workflows need a model key or they will not run. Ask the user which they have, then collect **one**:
+This brain defaults to Telos-hosted Grok (`llm-model: telosbrain/xai/grok-4.6` in `brain-compose.yml`). Runs use Telos Brain LLM credits and are charged at **double** the provider API rate. Recommend the user add their own LLM API key so they pay list price instead.
 
-| Provider | Where to get a key | `.env` variable |
-|---|---|---|
-| Claude (Anthropic) | https://console.anthropic.com | `ANTHROPIC_API_KEY` |
-| Grok (xAI) | https://console.x.ai | `XAI_API_KEY` |
-
-Starter workflows pin Anthropic (`anthropic/claude-sonnet-4-6`). If the user only has a Grok key, set `XAI_API_KEY` **and** point the brain at an xAI model, for example in `.env`:
-
-```
-DEFAULT_LLM_MODEL=xai/grok-4-5
-```
-
-or ask them to set **Default LLM model** in the brain Settings after first deploy. A reachable brain default overrides the workflow pins.
+| Provider | Where to get a key | `.env` variable | Then set in `brain-compose.yml` |
+|---|---|---|---|
+| Grok (xAI) | https://console.x.ai | `XAI_API_KEY` | `llm-model: xai/grok-4.6` |
+| Claude (Anthropic) | https://console.anthropic.com | `ANTHROPIC_API_KEY` | `llm-model: anthropic/claude-sonnet-4-6` |
 
 Optional later:
 
@@ -115,10 +107,9 @@ Work from the `brain/` directory.
    ```
    TELOS_BRAIN_ORG_API_KEY=<key from signup, or the user's existing org key>
    TELOS_BRAIN_API_URL=https://go.telosbrain.com
-   ANTHROPIC_API_KEY=<their Claude key>
    ```
 
-   or `XAI_API_KEY` plus `DEFAULT_LLM_MODEL` as above. Leave unused key lines blank.
+   If they supplied their own LLM key, add that variable and change `llm-model` in `brain-compose.yml` as above. Leave unused key lines blank. Deploy works without a provider key — runs then use Telos Brain LLM credits.
 
 4. Deploy:
 
@@ -182,7 +173,7 @@ brain start
 
 `brain start` writes `.env.local` (if missing), starts SQL Server and the Brain server in Docker, and opens the admin UI at **http://127.0.0.1:60061** (no sign-in). It uses a well-known local organisation key that **must not** be used in production.
 
-Put the Claude or Grok key in `.env.local` (same variable names as cloud). Then:
+Telos-hosted Grok is unavailable on the local stack. Put a Claude or Grok key in `.env.local` and change `llm-model` in `brain-compose.yml` (same values as cloud). Then:
 
 ```bash
 brain deploy --env local --instance advisor

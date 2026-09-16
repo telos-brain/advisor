@@ -10,9 +10,6 @@ description: >-
   produced good advice (advice 40 / memory 30 / skills 30), persists the
   score with set_run_grading, and files each learning as a PENDING inbox
   entry (routing_type EVAL).
-# Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
-# compose llm-model wins when that credential exists (BRA210).
-model: anthropic/claude-sonnet-4-6
 system-prompt-code: WF-SYSTEM-PROMPT
 # type EVAL = Run eval button on any evaluable run (trigger ignored there).
 # The :high qualifier is what enables auto enqueue; WF-ASK-FOR-ADVICE limits

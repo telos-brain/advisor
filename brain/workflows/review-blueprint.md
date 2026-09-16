@@ -6,9 +6,6 @@ description: >-
   searches for a close match, then either merges into an existing entry or
   creates a new one. Never both.
 version: 3
-# Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
-# compose llm-model wins when that credential exists (BRA210).
-model: anthropic/claude-sonnet-4-6
 
 # Tasks are created by WF-REVIEW-UOW / WF-TRIAGE via add_inbox_task with
 # workflow_code WF-REVIEW-BLUEPRINT. An inbox: trigger with :low enables

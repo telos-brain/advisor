@@ -3,9 +3,6 @@ name: Chat
 code: WF-CHAT
 description: Conversational advisor with briefing, framing, advice, skill lookup and memory.
 version: 6
-# Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
-# compose llm-model wins when that credential exists (BRA210).
-model: anthropic/claude-sonnet-4-6
 
 # RUNNABLE: this workflow is executed manually / interactively as a chat.
 type: RUNNABLE

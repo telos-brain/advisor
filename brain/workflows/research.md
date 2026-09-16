@@ -6,9 +6,6 @@ description: >-
   and memory. Compiles findings into a new PROCESSED inbox entry (no RESEARCH
   routing — prevents recursion).
 version: 4
-# Fallback when no brain default is set. Settings / DEFAULT_LLM_MODEL /
-# compose llm-model wins when that credential exists (BRA210).
-model: anthropic/claude-sonnet-4-6
 
 # Tasks are created by WF-TRIAGE (or Admin routing) with workflow_code
 # WF-RESEARCH. trigger-mode manual keeps stage-1 tasks in AWAITING_APPROVAL
