@@ -4,7 +4,7 @@ This is a **Telos Brain** that acts as an advisor to *your* AI agents — Claude
 
 The advisor's name is **Sol**. Treat Sol like a human advisor: brief them, give them the craft they need, then use them when you are reviewing work and decisions. Sol is not a chatbot and not a second pair of hands on the keyboard. Sol holds memory, skills, and judgment, and answers when the calling agent asks.
 
-This README is written for an **AI agent** that will set the brain up with a human. Do not invent API keys. Ask the user for each secret, wait, then continue.
+This README is written for an **AI agent** that will set the brain up with a human. Do not invent API keys. Collect each secret from the user, or from the signup API response, then continue.
 
 ---
 
@@ -52,9 +52,25 @@ Stop and ask the user for these. Do not skip ahead.
 
 ### 1. Telos Brain organisation and API key
 
-1. Tell the user to open **https://go.telosbrain.com** and create an organisation (free sign-up).
-2. Tell them to create an **organisation API key** (they must be an organisation admin). The full key is shown **once**.
-3. Ask them to paste that key. Put it in `brain/.env` as `TELOS_BRAIN_ORG_API_KEY`. Never commit `.env`.
+Sign the user up through the public Management API.
+
+1. Ask for an **account name** (organisation display name), their **full name**, and the **email** that should receive the invite.
+2. Ask them to accept the Telos Brain terms and conditions. When they agree, send `termsAndConditions: true`.
+3. Call the public signup endpoint once:
+
+   ```bash
+   curl -sS -X POST https://go.telosbrain.com/organisations/signup \
+     -H "Content-Type: application/json" \
+     -d '{
+       "accountName": "<account name>",
+       "personName": "<full name>",
+       "email": "<email>",
+       "termsAndConditions": true
+     }'
+   ```
+
+4. A `201` response looks like `{ "organisationId": "…", "apiKey": "tbk_…" }`. Put `apiKey` in `brain/.env` as `TELOS_BRAIN_ORG_API_KEY` and ask the user to store it in a password manager. The key is shown **once**.
+5. Tell the user to accept the invite email and sign in at **https://go.telosbrain.com**. That activates the organisation and grants **$10** welcome credit. Deploy can proceed with the returned key; workflow runs start once the organisation is Active.
 
 Cloud deploy talks to `https://go.telosbrain.com` by default (`TELOS_BRAIN_API_URL` in `.env.example`).
 
@@ -94,10 +110,10 @@ Work from the `brain/` directory.
 
 2. Copy `.env.example` to `.env` (if `.env` does not already exist).
 
-3. Fill in, from the user:
+3. Fill in:
 
    ```
-   TELOS_BRAIN_ORG_API_KEY=<their org key>
+   TELOS_BRAIN_ORG_API_KEY=<key from signup, or the user's existing org key>
    TELOS_BRAIN_API_URL=https://go.telosbrain.com
    ANTHROPIC_API_KEY=<their Claude key>
    ```
