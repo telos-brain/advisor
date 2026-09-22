@@ -3,13 +3,15 @@ name: Inbox Triage
 code: WF-TRIAGE
 description: >-
   Triages every new inbox entry for maintenance learnings, research requests,
-  and blueprint domain concepts — including PENDING EVAL learnings filed by
-  WF-EVAL-RUN (no tasks yet). First scans recent open entries for duplicates
-  or related signals and clusters them when a clear pattern exists. Then routes
-  skill craft, workflow/tool fixes, brain self-management, and research asks to
-  the matching workflows, and creates review_blueprint tasks for clear category
-  matches — without repeating the entry body into maintenance task instructions.
-version: 14
+  and blueprint domain concepts. Direct intake (email, document upload,
+  Granola, manual) is high-priority source material: skip clustering and
+  create tasks immediately. Eval findings from WF-EVAL-RUN stay PENDING
+  until this workflow clusters related signals and then creates apply tasks.
+  Routes skill craft, workflow/tool fixes, brain self-management, and
+  research asks to the matching workflows, and creates review_blueprint
+  tasks for clear category matches — without repeating the entry body into
+  maintenance task instructions.
+version: 15
 
 type: TRIGGERED
 trigger: inbox:*
@@ -38,18 +40,21 @@ injected-skills:
 
 You are triaging a single inbox entry. You do **not** apply changes. You only:
 
-1. Scan recent open entries for **duplicates or related signals** and cluster
-   them when a clear pattern exists (`create_inbox_cluster`).
-2. Decide which **maintenance** workflows should run (skill / workflow / brain)
+1. Classify the entry as **direct intake** or **eval learning** (see Signal
+   class below).
+2. **Eval learnings only:** scan recent open entries for duplicates or related
+   signals and cluster them when a clear pattern exists
+   (`create_inbox_cluster`). Never cluster direct intake.
+3. Decide which **maintenance** workflows should run (skill / workflow / brain)
    and whether a **research** request should run (`WF-RESEARCH`).
-3. Detect **blueprint** domain concepts that clearly fit a category and create
+4. Detect **blueprint** domain concepts that clearly fit a category and create
    `review_blueprint` tasks for them.
 
-Clustering is an additive pre-pass. If you cluster, create tasks **immediately**
+Clustering is an eval-only pre-pass. If you cluster, create tasks **immediately**
 on the **new cluster** entry (its reference is in the tool result). Do not
 create tasks on the source entries — they are `COMPLETED` and their open tasks
 are cancelled. If you only flag a partial signal or find no relationship,
-create tasks on this entry as usual.
+create tasks on this entry as usual. Direct intake never enters this pre-pass.
 
 Work is dispatched **on the task**. Each `add_inbox_task` names a
 `workflow_code`; auto-run vs `AWAITING_APPROVAL` is decided from that linked
@@ -64,8 +69,13 @@ create. Changing it later does not create, cancel, or re-route tasks. Leave
 it as filed (eval entries stay `EVAL`).
 
 **Eval learnings:** `WF-EVAL-RUN` files each finding as `PENDING` with
-`routing_type: EVAL` and `source: WF-EVAL-RUN`. This workflow clusters those
-entries and creates their apply tasks.
+`routing_type: EVAL` and `source: WF-EVAL-RUN`. Those are extracted fragments.
+This workflow may cluster them before creating apply tasks.
+
+**Direct intake** (email, document upload, Granola, manual create) is
+operator-supplied source material. It is already a complete artefact. Process
+it into tasks on this entry immediately. Do not cluster it, do not wait for
+more signals, and do not apply the eval weight-1 seed rules.
 
 Maintenance/research routing and blueprint detection are independent and
 additive. Blueprint detection must not change maintenance/research routing, and
@@ -98,12 +108,50 @@ run; otherwise brain-global). Use **only** these for blueprint tasks:
 {{/blueprint.categories}}
 </blueprint_categories>
 
+## Signal class
+
+Classify **before** clustering or routing. Use `Source` and `Routing` from
+the inbox entry block.
+
+### Eval learning — clustering allowed
+
+`Source` is `WF-EVAL-RUN` or `WF-EVAL`, or `Routing` is `EVAL`. These are
+already-extracted fragments (title + recommended change). Clustering,
+partial-signal annotation, and the weight-1 seed rules apply only here.
+
+### Direct intake — skip clustering, create tasks now
+
+Everything else is **direct intake**: the operator (or an external system
+on their behalf) supplied this material on purpose. Typical sources:
+`Postmark` (email), document / file upload, `Granola`, `Manual`, portal,
+Management API, Execution API. Weight 1 is expected and sufficient. Treat
+it as high-priority training input — above an unclustered eval seed.
+
+Never:
+
+- Call `create_inbox_cluster`
+- Call `list_inbox_entries` to hunt for related signals
+- Annotate `Partial signal — awaiting further signals…`
+- Hold back tasks because weight is below 5 or the signal looks like a seed
+
+Create every matching maintenance and blueprint task on
+`{{inboxEntry.reference}}` in this run.
+
+If class is ambiguous, prefer **direct intake** (tasks now, no cluster).
+
 ## Decision criteria — maintenance
+
+### Direct intake
+
+Read the body as source material and extract every distinct signal. A
+document or email is often rich — several maintenance destinations plus many
+blueprint tasks is expected. Do not collapse it into one eval-style finding.
+Leave `source` and `routing_type` as filed.
 
 ### Eval findings (`source: WF-EVAL-RUN` / `WF-EVAL`)
 
-These are already-extracted learnings (title + recommended change). Create
-tasks from the recommended change. Leave `source` and `routing_type` as filed.
+Create tasks from the recommended change. Leave `source` and `routing_type`
+as filed.
 
 - Skill / agent behaviour → `WF-UPDATE-SKILL`
 - Tool description, usage, or workflow steps → `WF-UPDATE-WORKFLOW`
@@ -166,16 +214,21 @@ contains both a research ask and a separate maintenance signal.
 A mixed entry is common: create maintenance tasks only for the signals that
 clear the bar.
 
-## Decision criteria — clustering (pre-pass)
+## Decision criteria — clustering (eval learnings only)
 
-Clustering is continuous quality improvement, not a one-time cleanup. Goals:
-raise learning quality, collapse near-duplicates, and amplify recurrent
-signals. Do **not** cluster for its own sake.
+Skip this entire section for **direct intake**. Do not list other entries.
+Do not cluster. Do not annotate a partial signal.
 
-A new entry is a **seed** (weight 1). Seeds are valid records. Most seeds
-should reach weight **5+** (via clustering) before they are treated as a
-complete brain-level learning. A weight-1 entry may still be routed when the
-signal is clear, well-evidenced, and not over-fitted to a single eval.
+For **eval learnings**, clustering is continuous quality improvement, not a
+one-time cleanup. Goals: raise learning quality, collapse near-duplicates,
+and amplify recurrent eval signals. Do **not** cluster for its own sake.
+Never pull a direct-intake entry into an eval cluster.
+
+A new eval entry is a **seed** (weight 1). Seeds are valid records. Most
+eval seeds should reach weight **5+** (via clustering) before they are
+treated as a complete brain-level learning. A weight-1 eval may still be
+routed when the signal is clear, well-evidenced, and not over-fitted to a
+single run. These seed rules do **not** apply to direct intake.
 
 ### Grouping signals (strongest first)
 
@@ -222,9 +275,11 @@ standalone learning. Continue with existing routing unmodified.
 
 - Never force-fit unrelated entries into a cluster
 - Never invent relatedness from timestamp alone
+- Never include a direct-intake entry (email, upload, Granola, manual) in
+  an eval cluster
 - Skip this entry's own row when reading `list_inbox_entries`
-- From the list, include **all** related references in the cluster. Use
-  `get_inbox_entry` only when title/metadata is not enough to confirm a
+- From the list, include **all** related **eval** references in the cluster.
+  Use `get_inbox_entry` only when title/metadata is not enough to confirm a
   relationship — do not cap the cluster at two entries.
 - Do not call `create_inbox_cluster` on entries that are already `COMPLETED`
 - Do not close an entry as `COMPLETED` yourself to "merge" — clustering does
@@ -250,17 +305,23 @@ finance, etc.). This is memory for the business — not agent-quality improvemen
 
 1. Read the entry body and the **Existing tasks** list at the end of this
    prompt — do not call a tool to list tasks; they are already injected.
-2. **Clustering pass** — call `list_inbox_entries` once (omit `status` and
-   `count` so you get the default 50 open entries). Ignore this entry's own
-   `Reference`. From `WorkflowName`, `EntityName`, `UnitOfWorkName`, `Source`,
-   `Date`, and title, collect **every** related open entry. Then apply Cluster
-   / Partial signal / No action from **Decision criteria — clustering**.
+   Classify as **direct intake** or **eval learning**.
+2. **Clustering pass (eval learnings only)** — if this is direct intake:
+   skip this step entirely. Task target is `{{inboxEntry.reference}}`.
+   If this is an eval learning: call `list_inbox_entries` once (omit `status`
+   and `count` so you get the default 50 open entries). Ignore this entry's
+   own `Reference` and skip any row that is itself direct intake. From
+   `WorkflowName`, `EntityName`, `UnitOfWorkName`, `Source`, `Date`, and
+   title, collect **every** related open eval entry. Then apply Cluster /
+   Partial signal / No action from **Decision criteria — clustering**.
    After a cluster, the task target is the **new cluster reference**; otherwise
    it is `{{inboxEntry.reference}}`.
 3. **Maintenance pass** — decide which maintenance destinations apply (zero or
-   more), including `WF-RESEARCH` when criteria match. Skip any destination
-   whose workflow code already has a non-`CANCELLED` / non-`FAILED` task. For
-   each new destination, call `add_inbox_task` with:
+   more), including `WF-RESEARCH` when criteria match. For direct intake,
+   extract every distinct signal in the document or email — do not wait for
+   more evidence. Skip any destination whose workflow code already has a
+   non-`CANCELLED` / non-`FAILED` task. For each new destination, call
+   `add_inbox_task` with:
    - `inbox_entry_reference` = the task target from step 2
    - `workflow_code` = the destination workflow code
    - `instructions` = one short routing line only (what to do, not the content).
@@ -272,7 +333,8 @@ finance, etc.). This is memory for the business — not agent-quality improvemen
      Do **not** paste or summarise the entry body — maintenance workflows read
      `{{inboxEntry.body}}`.
 4. **Blueprint pass** — independently list candidate concepts that clearly fit a
-   category. If none: create no blueprint tasks (do not invent any). For each
+   category. Direct intake is often rich: create a task per clear concept.
+   If none: create no blueprint tasks (do not invent any). For each
    candidate, call `add_inbox_task` with:
    - `inbox_entry_reference` = the task target from step 2
    - `workflow_code` = `WF-REVIEW-BLUEPRINT`
@@ -280,10 +342,12 @@ finance, etc.). This is memory for the business — not agent-quality improvemen
      `review blueprint: {category name} — {short concept description}`
      Example: `review blueprint: Business Concepts — billboard sites`
 5. If neither pass produces tasks: leave the entry for other routing. Do not
-   dismiss solely because it lacks signal.
-6. Reply in a few lines: clustering outcome (clustered / partial signal / none),
-   maintenance destinations (including research), blueprint task count, and any
-   skips for duplicates.
+   dismiss solely because it lacks signal. For direct intake, a missed task
+   is worse than creating one extra justified destination.
+6. Reply in a few lines: signal class (direct intake / eval), clustering
+   outcome (skipped / clustered / partial signal / none), maintenance
+   destinations (including research), blueprint task count, and any skips
+   for duplicates.
 
 ## Rules
 
@@ -296,6 +360,7 @@ finance, etc.). This is memory for the business — not agent-quality improvemen
 - Prefer a missed research route over a false `RESEARCH` classification
 - Prefer a missed blueprint concept over force-fitting a category
 - Prefer a missed cluster over force-fitting unrelated entries
+- Never cluster direct intake (email, document upload, Granola, manual)
 - Never close an entry as COMPLETED except via `create_inbox_cluster`
 - Never change `source`. Leave `routing_type` as filed.
 
